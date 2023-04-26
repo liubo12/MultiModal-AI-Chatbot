@@ -36,11 +36,9 @@
 支持 Linux、MacOS、Windows 系统，需安装 Python 及 requirement.txt 中的包。
 本项目在Linux进行测试运行，python版本为3.10
 
-项目代码克隆：
+克隆项目代码，并安装依赖：
 
 ```bash
-git clone xxx
-cd xxx
 pip install -r requirement.txt
 ```
 > 或在 Realase 直接手动下载源码。
