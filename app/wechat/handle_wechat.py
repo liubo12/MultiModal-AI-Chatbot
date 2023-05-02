@@ -1,24 +1,29 @@
 # -*- coding: utf-8 -*-
-# filename: handle.py
+# filename: handle_wechat.py
 
 import hashlib
-import web
 import time
 import os
-
-import wechat.receive as receive
-import wechat.reply as reply
-
-from model.post_txt2img import txt2img
-from model.post_txt2img import get_access_token
-from model.post_txt2img import upload_mmdeia
-
-from model.post_chatgpt import achieve_query
-from model.post_chatgpt import chat_GPT
-
+import sys
 from multiprocessing import Process
 from multiprocessing import Value
 from multiprocessing import Manager
+
+from flask import request
+#from flask.views import MethodView
+
+import app.wechat.receive as receive
+import app.wechat.reply as reply
+from app.handle_interface import Handle
+
+sys.path.append('..')
+from model.stablediffusion_api import txt2img
+from model.stablediffusion_api import get_access_token
+from model.stablediffusion_api import upload_mmdeia
+from model.openai_api import achieve_query
+from model.openai_api import chat_GPT
+from model.openai_api import image_create
+from model.translator_api import cn2en
 
 from config import MyConfig
 
@@ -33,24 +38,19 @@ res_cache=manager.dict()#key:(toUser, fromUser) values:reply.Msg
 #实现chatGPT的多轮对话操作
 chat_cache=manager.dict()#key:(toUser, fromUser) values:[] 列表结构的query
 
-
-
-class Handle(object):
+class HandleWeChat(Handle):
 
     def __init__(self):
         self.app_root = os.path.dirname(__file__)
         self.templates_root = os.path.join(self.app_root, 'templates')
-        self.render = web.template.render(self.templates_root)
+        #self.render = web.template.render(self.templates_root)
         self.myconfig=MyConfig()
-    def GET(self):
+    def get(self):
         try:
-            data = web.input()
-            if len(data) == 0:
-                return "hello, this is handle view"
-            signature = data.signature
-            timestamp = data.timestamp
-            nonce = data.nonce
-            echostr = data.echostr
+            signature = request.args.get('signature')
+            timestamp = request.args.get('timestamp')
+            nonce = request.args.get('nonce')
+            echostr = request.args.get('echostr')
             token=self.myconfig.get_wechat_token()#公众号token
 
             list = [token, timestamp, nonce]
@@ -66,10 +66,11 @@ class Handle(object):
             return Argument
     
     #generate res of longtime(>5s) requests,to put into res_cache
-    def child_operation_draw(self,toUser,fromUser,content):
-        #replyMsg=reply.TextMsg(toUser, fromUser, '老子在做测试~！')
-        #return replyMsg.send()
-        txt2img_res=txt2img(content)
+    def child_operation_draw(self,toUser,fromUser,content,method='openai'):
+        if method=='stable diffusion':
+            txt2img_res=txt2img(content)
+        elif method=='openai':
+            txt2img_res=image_create(content)
         if not txt2img_res:
             replyMsg=reply.TextMsg(toUser, fromUser, '生成图片过程中出错~！')
             res_cache[(toUser, fromUser)]=replyMsg
@@ -86,7 +87,7 @@ class Handle(object):
             print(access_token)
             return
 
-        img_id=upload_mmdeia(access_token,'image','res.jpg')
+        img_id=upload_mmdeia(access_token,'image','./generate/res.jpg')
         if not img_id:
             print('Upload processing failed,chect your access_token or file is legal！~')
             replyMsg=reply.TextMsg(toUser, fromUser, '结果上传微信媒体服务器过程中出错~！')
@@ -111,8 +112,8 @@ class Handle(object):
         res_cache[(toUser, fromUser)]=replyMsg
         return 
 
-    def hello(self,toUser,fromUser):
-        replyMsg = reply.TextMsg(toUser, fromUser, 'Hello,这是个多功能聊天机器人！\n1.画图请输入img:画图描述；\n2.聊天请直接输入文字。\n3.语音聊天请直接发送；\n4.语音画图请在语音中声明“画图”或“生成图片”；\n5.英语画图请在语音开头声明“draw”。\n提示：聊天默认开启多轮服务模式，清除多轮缓存请输入“#清除”\n更多功能开发中，敬请期待！~')
+    def help(self,toUser,fromUser):
+        replyMsg = reply.TextMsg(toUser, fromUser, '您好，这是一个多功能AI聊天机器人，支持输入语音、文字，生成对应的图文。\n1.文字、语音请直接发送，回复包括文字，图片，表格等形式的答案；\n2.支持中英双语画图，中文请在问题中声明“画”或“生成图片”，英文请声明“draw”，输入语音时同理；\n3.聊天默认开启多轮服务模式，清除多轮缓存请输入“清除”\n4.如需查看使用方法，可输入“help”或者“帮助”\n更多功能开发中，敬请期待！~')
         return replyMsg.send()
 
     def go_on(self,toUser,fromUser):
@@ -122,7 +123,7 @@ class Handle(object):
             res_cache.pop( (toUser, fromUser) )
             return res.send()
         else:
-            replyMsg = reply.TextMsg(toUser, fromUser, '结果还未计算成功，请稍微再输入‘继续’查看！~')
+            replyMsg = reply.TextMsg(toUser, fromUser, '结果还未计算成功，请稍微再输入‘继续’或1查看！~')
             return replyMsg.send()
 
     def rm_chat_cache(self,toUser,fromUser):
@@ -132,14 +133,10 @@ class Handle(object):
         replyMsg = reply.TextMsg(toUser, fromUser, '清除成功，可以开始新的聊天！~')
         return replyMsg.send() 
 
-    def drawing(self,toUser,fromUser,content,ifvoice=False):
-        if not ifvoice:
-            content=content.replace('img：','img:')
-            sp_content=content.split('img:')
-            content=sp_content[1]                
+    def drawing(self,toUser,fromUser,content):
         process=Process(target=self.child_operation_draw,args=(toUser,fromUser,content,))
         process.start()
-        replyMsg = reply.TextMsg(toUser, fromUser, '您的图像生成业务巨耗时，后台正在疯狂计算。25秒左右请输入“继续”查看结果！~')
+        replyMsg = reply.TextMsg(toUser, fromUser, '您的图像生成业务巨耗时，后台正在疯狂计算。25秒左右请输入“继续”或1查看结果！~')
         return replyMsg.send()
 
     def chating(self,toUser,fromUser,content):
@@ -169,12 +166,13 @@ class Handle(object):
             res_cache.pop( (toUser, fromUser) )
             return res.send()
 
-        replyMsg = reply.TextMsg(toUser, fromUser, '您的聊天GPT业务相对耗时，后台正在努力计算。稍后请输入“继续”查看结果！~')
+        replyMsg = reply.TextMsg(toUser, fromUser, '您的聊天GPT业务相对耗时，后台正在努力计算。稍后请输入“继续”或1查看结果！~')
         return replyMsg.send()
 
-    def POST(self):
+    def post(self):
         try:
-            webData = web.data()
+            #webData = web.data()
+            webData=request.get_data()
             print("Handle Post webdata is ", webData)  # 后台打日志
             recMsg = receive.parse_xml(webData)
             if isinstance(recMsg, receive.Msg):
@@ -185,15 +183,16 @@ class Handle(object):
                     content=content.lower()
                     print(content)
 
-                    if ('hello' in content[:8] or 'help' in content[:6]):
-                        return self.hello(toUser,fromUser)
-                    elif (content=='继续'):
+                    if ('help' in content[:8] or '帮助' in content[:6]):
+                        return self.help(toUser,fromUser)
+                    elif (content=='继续' or content=='1'):
                         return self.go_on(toUser,fromUser)
                     elif (content=='清除'):
                         return self.rm_chat_cache(toUser,fromUser) 
 
-                    if 'img:' in content or 'img：' in content:
+                    if ('画图' in content) or ('生成图片' in content) or ('生成图像' in content) or ('画' in content[:3]) or ('draw' in content[:6]):
                         #画图
+                        content=cn2en(content)
                         return self.drawing(toUser,fromUser,content)
                     else:
                         #chatGPT
@@ -209,8 +208,8 @@ class Handle(object):
                     content=content.lower()
                     print(type(content))
                     print(content)
-                    if ('hello' in content[:8] or 'help' in content[:6]):
-                        return self.hello(toUser,fromUser)
+                    if ('help' in content[:8] or '帮助' in content[:6]):
+                        return self.help(toUser,fromUser)
                     elif (content=='继续') or '继续' in content[:4]:
                         return self.go_on(toUser,fromUser)
                     elif (content=='清除') or '清除' in content[:4]:
@@ -218,7 +217,8 @@ class Handle(object):
 
                     if ('画图' in content) or ('生成图片' in content) or ('生成图像' in content) or ('画' in content[:3]) or ('draw' in content[:6]):
                         #画图
-                        return self.drawing(toUser,fromUser,content,ifvoice=True)
+                        content=cn2en(content)
+                        return self.drawing(toUser,fromUser,content)
                     else:
                         #chatGPT
                         return self.chating(toUser,fromUser,content)
