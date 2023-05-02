@@ -1,0 +1,38 @@
+{   
+    "tig":"目前可读性一般，后期持续优化，并修改为json5添加注释",
+    "wechat":
+    {
+        "wechat token":"your wechat token",
+        "access_token interface":"https://api.weixin.qq.com/cgi-bin/token?",
+        "grant_type":"client_credential",
+        "appid":"your appid",
+        "secret":"your secret",
+        "up_media interface":"https://api.weixin.qq.com/cgi-bin/media/upload?"
+    },
+    "web":
+    {
+        "txt2img method":"openai",
+        "txt2txt location storage":false,
+        "cn2en":true
+    },
+    "terminal":
+    {
+        "txt2img method":"openai",
+        "txt2txt location storage":false,
+        "cn2en":true
+    },
+    "model":
+    {
+        "openai":
+        {
+            "api_key":"your openai api key",
+            "chatgpt_model":"gpt-3.5-turbo",
+            "image_create":"512x512"
+        },
+        "stable diffusion":
+        {
+        "txt2img":"http://120.78.161.66:8001/sdapi/v1/txt2img"
+        },
+        "translator":"googletrans"
+    }
+}
