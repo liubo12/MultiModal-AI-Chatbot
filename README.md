@@ -33,7 +33,7 @@
 
 ### 1.运行环境
 
-支持 Linux、MacOS、Windows 系统，需安装 Python 及 requirement.txt 中的包。
+支持 Linux、MacOS、Windows 系统，需安装 Python 及 requirement.txt 中的包，若使用openai的相关接口（如：chatgpt，DALL E-2），需要在代理的环境下运行。
 本项目在Linux进行测试运行，python版本为3.10
 
 克隆项目代码，并安装依赖：
@@ -51,6 +51,12 @@ pip install -r requirement.txt
 
 ```bash
 "api_key":"your openai api key"
+```
+
+最后在代理的环境下，运行
+
+```bash
+python main.py --app terminal
 ```
 
 ## 二、选择模型
