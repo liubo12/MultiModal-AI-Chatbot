@@ -23,8 +23,8 @@
 **应用：**
 
  - [x] 微信公众号（个人订阅号）
- - [ ] 终端
- - [ ] Web
+ - [x] 终端
+ - [x] Web
 
 
 # 快速开始
@@ -155,6 +155,10 @@ Hit Ctrl-C to quit.
 配置模板中默认启动的应用即是终端，修改openai的api_key后，直接在项目目录下通过命令行执行 `python main.py` 
 便可启动程序。用户通过命令行的输入与对话模型交互，且支持流式响应效果。图片将会保存到目录 `generate/images/` 下
 
+```bash
+python main.py --app terminal
+```
+
 ### 3.Web
 
 **依赖**
@@ -166,12 +170,8 @@ pip3 install PyJWT flask flask_socketio
 **配置**
 
 ```bash
-{},
+python main.py --app web
 ```
-
-本地运行：`python main.py`运行后访问 `http://127.0.0.1:80`
-
-服务器运行：部署后访问 `http://公网域名或IP:端口`
 
 ### 通用配置
 
