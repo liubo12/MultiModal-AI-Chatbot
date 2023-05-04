@@ -109,7 +109,7 @@ python webui.py --api --port 8001
 
 需要一台服务器，一个订阅号
 
-#### 1.1 配置
+#### 1.1 配置`config.json`
 
 ```bash
 "wechat":
