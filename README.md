@@ -125,7 +125,7 @@ python webui.py --api --port 8001
 
 #### 1.2 运行程序
 
-在项目目录下运行 `python main.py 80`，终端显示如下则表示已成功运行：
+在项目目录下运行 `python main.py --app wechat`，终端显示如下则表示已成功运行：
 
 ```
 [INFO][2023-02-16 01:39:53][app.py:12] - [INIT] load config: ...
