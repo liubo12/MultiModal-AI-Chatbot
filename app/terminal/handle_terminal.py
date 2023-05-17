@@ -3,7 +3,7 @@
 import time
 import os
 import sys
-from multiprocessing import Manager
+#from multiprocessing import Manager
 from flask import request
 
 from app.handle_interface import Handle
@@ -16,11 +16,11 @@ from model.openai_api import image_create
 from model.translator_api import cn2en
 
 from config import MyConfig
-manager=Manager()
+#manager=Manager()
 
 
 #实现chatGPT的多轮对话操作
-chat_cache=manager.dict()#key:user values:[] 列表结构的query
+chat_cache=[]#manager.dict()#key:user values:[] 列表结构的query
 
 class HandleTerminal(Handle):
 
