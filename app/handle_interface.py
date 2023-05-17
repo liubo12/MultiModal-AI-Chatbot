@@ -2,11 +2,11 @@
 # filename: handle_interface.py
 from flask.views import MethodView
 from config import MyConfig
-from multiprocessing import Manager
+#from multiprocessing import Manager
 
-manager=Manager()
+#manager=Manager()
 #实现chatGPT的多轮对话操作
-chat_cache=manager.dict()#key:(toUser, fromUser) values:[] 列表结构的query
+#chat_cache=manager.dict()#key:(toUser, fromUser) values:[] 列表结构的query
 
 class Handle(MethodView):
 
@@ -18,9 +18,9 @@ class Handle(MethodView):
         return 
 
     def rm_chat_cache(self):
-        for i in chat_cache.keys():
-            chat_cache.pop(i)
-        print('清除chat_cache',chat_cache)
+        # for i in chat_cache.keys():
+        #     chat_cache.pop(i)
+        # print('清除chat_cache',chat_cache)
         return
 
     def drawing(self,content):
@@ -34,4 +34,3 @@ class Handle(MethodView):
 
     def post(self):
         return
-
