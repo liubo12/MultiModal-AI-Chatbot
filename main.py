@@ -4,7 +4,8 @@ import argparse
 from flask import Flask
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--app", help="launch mode,switch from [terminal,web,wechat]", type=str,default='terminal')
+parser.add_argument("--app", help="launch mode,switch from [terminal,web,wechat]", type=str,default='wechat')
+parser.add_argument("--port",type=int,default=80)
 #parser.add_argument('--cmd', default=False, action=argparse.BooleanOptionalAction)
 
 args = parser.parse_args()
@@ -22,7 +23,7 @@ elif mylaunch=='web':
     #安装后使用如下命令快速开始：
     #python main.py --app web
     #启动后通过以下命令快速获取使用方式：
-    #curl --location '3.143.252.187:80'
+    #curl --location 'ip:port'
     from app.web.handle_web import HandleWeb
     handle=HandleWeb
 elif mylaunch=='terminal':
@@ -34,4 +35,5 @@ elif mylaunch=='terminal':
 app.add_url_rule('/',view_func=handle.as_view('/'))
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0',port=80,debug=True)
+    myport=args.port
+    app.run(host='0.0.0.0',port=myport,debug=True)
