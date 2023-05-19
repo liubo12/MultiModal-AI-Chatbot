@@ -20,7 +20,7 @@ from config import MyConfig
 
 
 #实现chatGPT的多轮对话操作
-chat_cache=[]#manager.dict()#key:user values:[] 列表结构的query
+chat_cache={}#manager.dict()#key:user values:[] 列表结构的query
 
 class HandleTerminal(Handle):
 
