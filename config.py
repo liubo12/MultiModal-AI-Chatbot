@@ -59,6 +59,9 @@ class MyConfig(object):#单例模式
     def get_terminal_txt2img_method(self):
         return self.get_interface('terminal','txt2img method')
 
+    def get_wechat_txt2img_method(self):
+        return self.get_interface('wechat','txt2img method')
+
 
 
 

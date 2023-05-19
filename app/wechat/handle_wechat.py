@@ -134,6 +134,7 @@ class HandleWeChat(Handle):
         return replyMsg.send() 
 
     def drawing(self,toUser,fromUser,content):
+        #在此加入一行，使用get_wechat_txt2img_method()判断画图的method
         process=Process(target=self.child_operation_draw,args=(toUser,fromUser,content,))
         process.start()
         replyMsg = reply.TextMsg(toUser, fromUser, '您的图像生成业务巨耗时，后台正在疯狂计算。25秒左右请输入“继续”或1查看结果！~')
